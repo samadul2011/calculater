@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Calculator APK
 
 on:
   push:
@@ -11,19 +11,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    - name: Build with Buildozer
-      uses: ArtemSBulgakov/buildozer-action@v1
-      id: buildozer
-      with:
-        workdir: .
-        buildozer_version: stable
-        command: buildozer android debug
+    - name: Build with Buildozer in Docker
+      uses: thewtex/setup-buildozer@v1
 
-    - name: Upload artifact
+    - name: Build APK
+      run: |
+        buildozer init
+        buildozer android debug
+
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: calculator-debug
-        path: ${{ steps.buildozer.outputs.filename }}
+        path: bin/*.apk
         if-no-files-found: error
