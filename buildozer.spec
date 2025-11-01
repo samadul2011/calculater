@@ -25,3 +25,9 @@ log_level = 2
 
 android.accept_sdk_license = True
 android.skip_update = False
+
+# Allow Buildozer to automatically accept SDK licenses
+android.accept_sdk_license = True
+
+# Ensure Buildozer does not skip the SDK update
+android.skip_update = False
