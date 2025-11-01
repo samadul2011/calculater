@@ -1,31 +1,23 @@
-name: Build Calculator APK
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+name: Build APK
+on: [push]
 
 jobs:
-  build:
+  build-android:
+    name: Build for Android
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Buildozer
-      uses: fdo96/setup-buildozer@v1
- 
-    - name: Build APK
-      run: |
-        buildozer init
-        buildozer android debug
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
+        with:
+          command: pip install --user --upgrade Cython==0.29.33 virtualenv; buildozer android debug
+          buildozer_version: stable
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: calculator-debug
-        path: bin/*.apk
-        if-no-files-found: error
-
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: package
+          path: ${{ steps.buildozer.outputs.filename }}
