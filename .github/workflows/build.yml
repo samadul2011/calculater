@@ -20,32 +20,37 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y \
           python3-pip \
-          openjdk-11-jdk \
+          openjdk-11-jdk-headless \
           git \
           unzip \
           zip \
-          wget \
-          cmake
+          ccache \
+          autoconf \
+          libtool \
+          pkg-config \
+          zlib1g-dev \
+          libncurses5-dev \
+          libncursesw5-dev \
+          libtinfo5 \
+          cmake \
+          ninja-build \
+          libffi-dev \
+          libssl-dev
 
-    - name: Install Android SDK and accept licenses
+    - name: Install Buildozer and dependencies
       run: |
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
-        mkdir -p android-sdk
-        unzip -q commandlinetools-linux-8512546_latest.zip -d android-sdk/cmdline-tools
-        mv android-sdk/cmdline-tools/cmdline-tools android-sdk/cmdline-tools/latest
-        
-        yes | android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$PWD/android-sdk --licenses
-        android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$PWD/android-sdk "build-tools;33.0.0" "platforms;android-33"
+        pip3 install --user --upgrade Cython==0.29.33 buildozer virtualenv
 
-    - name: Install Buildozer
+    - name: Initialize Buildozer
       run: |
-        pip3 install --user --upgrade Cython==0.29.33 buildozer
+        python3 -m buildozer init
 
-    - name: Build APK
+    - name: Build APK with Buildozer
       run: |
-        export ANDROID_SDK_ROOT=$PWD/android-sdk
-        export PATH=$PWD/android-sdk/cmdline-tools/latest/bin:$PATH
         python3 -m buildozer -v android debug
+      env:
+        # Let Buildozer manage its own dependencies
+        BUILDOLDER_ROOT: ${{ github.workspace }}
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
