@@ -63,3 +63,9 @@ jobs:
         name: calculator-apk
         path: bin/*.apk
         retention-days: 7
+
+    - name: Install Android SDK Build-Tools and Platform Tools
+      run: |
+          yes | sdkmanager --licenses
+          sdkmanager "build-tools;33.0.0" "platform-tools" "platforms;android-33"
+
