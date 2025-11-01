@@ -21,3 +21,7 @@ fullscreen = 0
 
 [buildozer]
 log_level = 2
+
+
+android.accept_sdk_license = True
+android.skip_update = False
