@@ -24,14 +24,15 @@ jobs:
         run: |
           sudo apt-get update
           # python3-full provides the removed distutils module
-          sudo apt-get install -y python3-full python3-pip python3-venv \
-                               git zip unzip openjdk-11-jdk \
-                               # ncurses – use the dev package that exists
-                               libncurses5-dev libncurses6 \
-                               libstdc++6 libgtk-3-0 \
-                               libpangocairo-1.0-0 libgstreamer1.0-0 \
-                               gstreamer1.0-plugins-base libgl1-mesa-dev \
-                               libgles2-mesa-dev libmtdev-dev xclip xsel libjpeg-dev
+          sudo apt-get install -y \
+            python3-full python3-pip python3-venv \
+            git zip unzip openjdk-11-jdk \
+            # ncurses – use the dev package that exists on Ubuntu 24.04
+            libncurses5-dev libncurses6 \
+            libstdc++6 libgtk-3-0 \
+            libpangocairo-1.0-0 libgstreamer1.0-0 \
+            gstreamer1.0-plugins-base libgl1-mesa-dev \
+            libgles2-mesa-dev libmtdev-dev xclip xsel libjpeg-dev
 
       # -------------------------------------------------
       # 3️⃣ Set up a Python virtual environment
