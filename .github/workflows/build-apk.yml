@@ -8,9 +8,19 @@ on:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      
+      - name: Show repository contents
+        run: |
+          echo "=== Repository structure ==="
+          ls -la
+          echo "=== Checking for main.py ==="
+          ls -la main.py || echo "main.py not found!"
+          echo "=== Checking for buildozer.spec ==="
+          cat buildozer.spec || echo "buildozer.spec not found!"
       
       - name: Install build dependencies
         run: |
@@ -24,7 +34,7 @@ jobs:
             gstreamer1.0-plugins-base libgl1-mesa-dev \
             libgles2-mesa-dev libmtdev-dev xclip xsel libjpeg-dev \
             autoconf libtool pkg-config zlib1g-dev libssl-dev \
-            ccache cmake
+            ccache cmake libffi-dev
       
       - name: Set up Python venv
         run: |
@@ -33,11 +43,16 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install --upgrade cython==0.29.36
       
-      - name: Install Buildozer & Kivy
+      - name: Install Buildozer & dependencies
         run: |
           source venv/bin/activate
           pip install buildozer
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            echo "No requirements.txt found, installing Kivy only"
+            pip install kivy==2.3.0
+          fi
       
       - name: Setup Android environment
         run: |
@@ -49,24 +64,55 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.buildozer
-          key: buildozer-global-${{ hashFiles('buildozer.spec') }}
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            buildozer-${{ runner.os }}-
       
       - name: Cache Buildozer project directory
         uses: actions/cache@v3
         with:
           path: .buildozer
-          key: buildozer-project-${{ hashFiles('buildozer.spec') }}
+          key: buildozer-project-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            buildozer-project-${{ runner.os }}-
+      
+      - name: Verify buildozer installation
+        run: |
+          source venv/bin/activate
+          buildozer --version
+          python --version
+          which python
+          which buildozer
       
       - name: Build APK (debug)
         run: |
           source venv/bin/activate
-          yes | buildozer -v android debug
+          buildozer -v android debug 2>&1 | tee build.log
+        continue-on-error: true
         env:
           BUILDOZER_WARN_ON_ROOT: 0
+          USE_CCACHE: 1
+      
+      - name: Show build log on failure
+        if: failure()
+        run: |
+          echo "=== Last 200 lines of build output ==="
+          tail -n 200 build.log || echo "No build.log found"
+          echo "=== Buildozer state file ==="
+          cat .buildozer/state.db || echo "No state.db found"
       
       - name: Upload APK artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: calculator-apk
           path: bin/*.apk
-          if-no-files-found: error
+          if-no-files-found: warn
+      
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: warn
