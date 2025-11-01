@@ -23,13 +23,39 @@ jobs:
           openjdk-11-jdk-headless \
           git \
           unzip \
-          zip
+          zip \
+          libffi-dev \
+          libssl-dev \
+          autoconf \
+          automake \
+          libtool \
+          pkg-config \
+          cmake \
+          ninja-build
 
     - name: Install Buildozer
-      run: pip3 install --user buildozer Cython==0.29.33
+      run: |
+        python3 -m pip install --user --upgrade pip
+        python3 -m pip install --user buildozer Cython==0.29.33
 
-    - name: Build APK
-      run: buildozer -v android debug
+    - name: Cache Buildozer dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.buildozer
+          ~/.local/share/python-for-android
+        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+        restore-keys: |
+          ${{ runner.os }}-buildozer-
+
+    - name: Build with Buildozer (with retry)
+      run: |
+        # First attempt - this might fail but will download dependencies
+        buildozer -v android debug || true
+        # Second attempt - should work now that dependencies are cached
+        buildozer -v android debug
+      env:
+        BUILDOLDER_TIMEOUT: "1800"
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
