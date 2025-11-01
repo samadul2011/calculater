@@ -5,37 +5,37 @@ jobs:
   build-android:
     name: Build for Android
     runs-on: ubuntu-latest
-    container: python:3.9
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
     - name: Install system dependencies
       run: |
-        apt-get update
-        apt-get install -y \
+        sudo apt-get update
+        sudo apt-get install -y \
           python3-pip \
           openjdk-11-jdk \
           git \
           unzip \
           zip \
-          ccache \
-          autoconf \
-          libtool \
-          pkg-config \
-          zlib1g-dev \
-          libncurses5-dev \
-          libncursesw5-dev \
-          libtinfo5
+          ccache
 
-    - name: Install Buildozer
+    - name: Install Buildozer and dependencies
       run: |
-        pip3 install --upgrade Cython==0.29.33 buildozer
+        pip3 install --user --upgrade Cython==0.29.33 buildozer virtualenv
 
-    - name: Build APK
+    - name: Build APK with Buildozer
       run: |
-        buildozer android debug
+        python3 -m buildozer android debug
+      env:
+        # Set buildozer to use the current directory
+        BUILDOLDER_ROOT: ${{ github.workspace }}
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
