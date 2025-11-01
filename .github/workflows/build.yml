@@ -1,36 +1,8 @@
-name: Build APK
-on: [push]
-
-jobs:
-  build-android:
-    name: Build for Android
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Install dependencies
+    - name: Build APK with Buildozer (verbose)
       run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          python3-pip \
-          openjdk-11-jdk-headless \
-          git \
-          unzip \
-          zip
-
-    - name: Install Buildozer
-      run: |
-        pip3 install --user buildozer
-
-    - name: Build APK
-      run: |
-        buildozer android debug
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: calculator-apk
-        path: bin/*.apk
-        retention-days: 7
+        # Clean any previous builds
+        buildozer android clean
+        # Build with maximum verbosity
+        buildozer -v android debug 2>&1 | tee build.log
+      env:
+        BUILDOLDER_ROOT: ${{ github.workspace }}
