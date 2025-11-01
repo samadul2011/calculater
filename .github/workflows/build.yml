@@ -14,9 +14,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Build with Buildozer in Docker
-      uses: thewtex/setup-buildozer@v1
-
+    - name: Set up Buildozer
+      uses: fdo96/setup-buildozer@v1
+ 
     - name: Build APK
       run: |
         buildozer init
@@ -28,3 +28,4 @@ jobs:
         name: calculator-debug
         path: bin/*.apk
         if-no-files-found: error
+
