@@ -1,24 +1,71 @@
-name: Build APK
-on: [push]
+# .github/workflows/build-apk.yml
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]          # run on every push to main
+  workflow_dispatch:            # also allow manual trigger
 
 jobs:
-  build-android:
-    name: Build for Android
+  build-apk:
     runs-on: ubuntu-latest
-    container:
-      image: mikkeloscar/buildozer:latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      # -------------------------------------------------
+      # 1️⃣ Checkout the repository
+      # -------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Build with Buildozer
-      run: |
-        buildozer android debug
+      # -------------------------------------------------
+      # 2️⃣ Install system packages (including distutils)
+      # -------------------------------------------------
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          # python3-distutils was removed in newer Ubuntu releases;
+          # the meta‑package python3-full provides it.
+          sudo apt-get install -y python3-full python3-pip python3-venv \
+                               git zip unzip openjdk-11-jdk \
+                               libncurses5 libstdc++6 libgtk-3-0 \
+                               libpangocairo-1.0-0 libgstreamer1.0-0 \
+                               gstreamer1.0-plugins-base libgl1-mesa-dev \
+                               libgles2-mesa-dev libmtdev-dev xclip xsel libjpeg-dev
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: calculator-apk
-        path: bin/*.apk
-        retention-days: 7
+      # -------------------------------------------------
+      # 3️⃣ Set up a Python virtual environment
+      # -------------------------------------------------
+      - name: Set up Python venv
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          python -m pip install --upgrade pip setuptools wheel
+
+      # -------------------------------------------------
+      # 4️⃣ Install Buildozer and project requirements
+      # -------------------------------------------------
+      - name: Install Buildozer & Kivy
+        run: |
+          source venv/bin/activate
+          pip install buildozer
+          pip install -r requirements.txt
+
+      # -------------------------------------------------
+      # 5️⃣ Build the debug APK
+      # -------------------------------------------------
+      - name: Build APK (debug)
+        run: |
+          source venv/bin/activate
+          # Clean any previous partial builds (optional but safe)
+          buildozer android clean
+          # The -v flag gives verbose output in the Actions log
+          buildozer -v android debug
+
+      # -------------------------------------------------
+      # 6️⃣ Upload the generated APK as an artifact
+      # -------------------------------------------------
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: calculator-apk
+          path: bin/*.apk
