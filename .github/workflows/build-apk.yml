@@ -18,16 +18,17 @@ jobs:
         uses: actions/checkout@v4
 
       # -------------------------------------------------
-      # 2️⃣ Install system packages (including distutils)
+      # 2️⃣ Install system packages (including a working ncurses)
       # -------------------------------------------------
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          # python3-distutils was removed in newer Ubuntu releases;
-          # the meta‑package python3-full provides it.
+          # python3-full provides the removed distutils module
           sudo apt-get install -y python3-full python3-pip python3-venv \
                                git zip unzip openjdk-11-jdk \
-                               libncurses5 libstdc++6 libgtk-3-0 \
+                               # ncurses – use the dev package that exists
+                               libncurses5-dev libncurses6 \
+                               libstdc++6 libgtk-3-0 \
                                libpangocairo-1.0-0 libgstreamer1.0-0 \
                                gstreamer1.0-plugins-base libgl1-mesa-dev \
                                libgles2-mesa-dev libmtdev-dev xclip xsel libjpeg-dev
@@ -58,7 +59,7 @@ jobs:
           source venv/bin/activate
           # Clean any previous partial builds (optional but safe)
           buildozer android clean
-          # The -v flag gives verbose output in the Actions log
+          # Verbose output helps when debugging the CI run
           buildozer -v android debug
 
       # -------------------------------------------------
