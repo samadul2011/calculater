@@ -88,25 +88,37 @@ jobs:
         run: |
           source venv/bin/activate
           buildozer -v android debug 2>&1 | tee build.log
-        continue-on-error: true
+          BUILD_EXIT_CODE=${PIPESTATUS[0]}
+          echo "Build exit code: $BUILD_EXIT_CODE"
+          exit $BUILD_EXIT_CODE
         env:
           BUILDOZER_WARN_ON_ROOT: 0
           USE_CCACHE: 1
       
+      - name: Find APK location
+        if: always()
+        run: |
+          echo "=== Searching for APK files ==="
+          find . -name "*.apk" -type f 2>/dev/null || echo "No APK files found"
+          echo "=== Checking bin directory ==="
+          ls -la bin/ 2>/dev/null || echo "bin/ directory not found"
+          echo "=== Checking .buildozer directory ==="
+          find .buildozer -name "*.apk" -type f 2>/dev/null || echo "No APK in .buildozer"
+      
       - name: Show build log on failure
         if: failure()
         run: |
-          echo "=== Last 200 lines of build output ==="
-          tail -n 200 build.log || echo "No build.log found"
-          echo "=== Buildozer state file ==="
-          cat .buildozer/state.db || echo "No state.db found"
+          echo "=== Last 300 lines of build output ==="
+          tail -n 300 build.log || echo "No build.log found"
       
       - name: Upload APK artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: calculator-apk
-          path: bin/*.apk
+          path: |
+            bin/*.apk
+            .buildozer/android/platform/build-*/dists/*/build/outputs/apk/debug/*.apk
           if-no-files-found: warn
       
       - name: Upload build log
