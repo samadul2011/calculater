@@ -12,17 +12,15 @@ requirements = python3,kivy
 # Android specific
 android.api = 33
 android.minapi = 21
-android.ndk = 25b
+android.ndk = 25.1.8937393
 android.sdk = 33
-android.allow_backup = False
+android.build_tools = 33.0.0
 
+# Presplash and icon
 presplash.filename = %(source.dir)s/presplash.png
 icon.filename = %(source.dir)s/icon.png
 
 orientation = portrait
-osx.python_version = 3
-osx.kivy_version = 1.9.0
-
 fullscreen = 0
 
 [buildozer]
