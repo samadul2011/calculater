@@ -5,57 +5,16 @@ jobs:
   build-android:
     name: Build for Android
     runs-on: ubuntu-latest
-    
+    container:
+      image: mikkeloscar/buildozer:latest
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-
-    - name: Install system dependencies
+    - name: Build with Buildozer
       run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          python3-pip \
-          openjdk-11-jdk-headless \
-          git \
-          unzip \
-          zip \
-          libffi-dev \
-          libssl-dev \
-          autoconf \
-          automake \
-          libtool \
-          pkg-config \
-          cmake \
-          ninja-build
-
-    - name: Install Buildozer
-      run: |
-        python3 -m pip install --user --upgrade pip
-        python3 -m pip install --user buildozer Cython==0.29.33
-
-    - name: Cache Buildozer dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.buildozer
-          ~/.local/share/python-for-android
-        key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
-        restore-keys: |
-          ${{ runner.os }}-buildozer-
-
-    - name: Build with Buildozer (with retry)
-      run: |
-        # First attempt - this might fail but will download dependencies
-        buildozer -v android debug || true
-        # Second attempt - should work now that dependencies are cached
-        buildozer -v android debug
-      env:
-        BUILDOLDER_TIMEOUT: "1800"
+        buildozer android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
@@ -63,25 +22,3 @@ jobs:
         name: calculator-apk
         path: bin/*.apk
         retention-days: 7
-
-    - name: Install Android SDK Build-Tools and Platform Tools
-      run: |
-          yes | sdkmanager --licenses
-          sdkmanager "build-tools;33.0.0" "platform-tools" "platforms;android-33"
-
-    - name: Set up Android SDK and Build-Tools
-      run: |
-        echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdtools.zip
-        mkdir -p $HOME/android-sdk
-        unzip -q cmdtools.zip -d $HOME/android-sdk/cmdline-tools
-        mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
-        
-        # Accept licenses and install specific packages
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
-        
-        # Verify aidl is available
-        $HOME/android-sdk/build-tools/33.0.0/aidl --version
-
-
