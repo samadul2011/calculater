@@ -34,14 +34,11 @@ android.minapi = 21
 android.ndk = 25b
 android.sdk = 33
 android.accept_sdk_license = True
+android.skip_update = False
 
 # iOS specific (not needed for Android builds but included for completeness)
 ios.kivy_ios_branch = master
 ios.ios_deploy_branch = 1.10.0
-
-# Skip the compilation of .py to .pyc
-android.skip_update = False
-android.accept_sdk_license = True
 
 [buildozer]
 # Log level (0 = error only, 1 = info, 2 = debug)
