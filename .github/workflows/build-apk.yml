@@ -9,15 +9,9 @@ jobs:
   build-apk:
     runs-on: ubuntu-latest
     steps:
-      # -------------------------------------------------
-      # 1️⃣ Checkout the repository
-      # -------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      # -------------------------------------------------
-      # 2️⃣ Install system packages
-      # -------------------------------------------------
       - name: Install build dependencies
         run: |
           sudo apt-get update
@@ -32,9 +26,6 @@ jobs:
             autoconf libtool pkg-config zlib1g-dev libssl-dev \
             ccache cmake
       
-      # -------------------------------------------------
-      # 3️⃣ Set up Python virtual environment
-      # -------------------------------------------------
       - name: Set up Python venv
         run: |
           python3 -m venv venv
@@ -42,27 +33,18 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install --upgrade cython==0.29.36
       
-      # -------------------------------------------------
-      # 4️⃣ Install Buildozer and dependencies
-      # -------------------------------------------------
       - name: Install Buildozer & Kivy
         run: |
           source venv/bin/activate
           pip install buildozer
           pip install -r requirements.txt
       
-      # -------------------------------------------------
-      # 5️⃣ Set up Android SDK/NDK environment
-      # -------------------------------------------------
       - name: Setup Android environment
         run: |
           echo "ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
       
-      # -------------------------------------------------
-      # 6️⃣ Cache Buildozer directories
-      # -------------------------------------------------
       - name: Cache Buildozer global directory
         uses: actions/cache@v3
         with:
@@ -75,17 +57,6 @@ jobs:
           path: .buildozer
           key: buildozer-project-${{ hashFiles('buildozer.spec') }}
       
-      # -------------------------------------------------
-      # 7️⃣ Initialize Buildozer (this creates necessary directories)
-      # -------------------------------------------------
-      - name: Initialize Buildozer
-        run: |
-          source venv/bin/activate
-          buildozer android init || true
-      
-      # -------------------------------------------------
-      # 8️⃣ Build the debug APK
-      # -------------------------------------------------
       - name: Build APK (debug)
         run: |
           source venv/bin/activate
@@ -93,9 +64,6 @@ jobs:
         env:
           BUILDOZER_WARN_ON_ROOT: 0
       
-      # -------------------------------------------------
-      # 9️⃣ Upload the generated APK as an artifact
-      # -------------------------------------------------
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
