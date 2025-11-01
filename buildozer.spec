@@ -1,23 +1,22 @@
 [app]
-title = Calculator
+title = Simple Calculator
 package.name = simplecalculator
 package.domain = org.example
 
 source.dir = .
-source.include_exts = py,png,jpg,kv
+source.include_exts = py,png,jpg,kv,atlas
 
-version = 1.0
-
+version = 0.1
 requirements = python3,kivy
 
-orientation = portrait
+presplash.filename = %(source.dir)s/presplash.png
+icon.filename = %(source.dir)s/icon.png
 
-android.permissions = INTERNET
-android.api = 33
-android.minapi = 21
-android.ndk = 25b
-android.arch = armeabi-v7a
-android.accept_sdk_license = True
+orientation = portrait
+osx.python_version = 3
+osx.kivy_version = 1.9.0
+
+fullscreen = 0
 
 [buildozer]
 log_level = 2
