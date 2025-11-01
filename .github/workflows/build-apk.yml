@@ -2,8 +2,9 @@
 name: Build Android APK
 on:
   push:
-    branches: [ main ]          # run on every push to main
-  workflow_dispatch:            # also allow manual trigger
+    branches: [ main ]
+  workflow_dispatch:
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -15,31 +16,34 @@ jobs:
         uses: actions/checkout@v4
       
       # -------------------------------------------------
-      # 2️⃣ Install system packages (including a working ncurses)
+      # 2️⃣ Install system packages
       # -------------------------------------------------
       - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             python3-full python3-pip python3-venv \
-            git zip unzip openjdk-11-jdk \
+            git zip unzip openjdk-17-jdk \
             libncurses5-dev libncurses6 \
             libstdc++6 libgtk-3-0 \
             libpangocairo-1.0-0 libgstreamer1.0-0 \
             gstreamer1.0-plugins-base libgl1-mesa-dev \
-            libgles2-mesa-dev libmtdev-dev xclip xsel libjpeg-dev
+            libgles2-mesa-dev libmtdev-dev xclip xsel libjpeg-dev \
+            autoconf libtool pkg-config zlib1g-dev libssl-dev \
+            ccache cmake
       
       # -------------------------------------------------
-      # 3️⃣ Set up a Python virtual environment
+      # 3️⃣ Set up Python virtual environment
       # -------------------------------------------------
       - name: Set up Python venv
         run: |
           python3 -m venv venv
           source venv/bin/activate
           python -m pip install --upgrade pip setuptools wheel
+          pip install --upgrade cython==0.29.36
       
       # -------------------------------------------------
-      # 4️⃣ Install Buildozer and project requirements
+      # 4️⃣ Install Buildozer and dependencies
       # -------------------------------------------------
       - name: Install Buildozer & Kivy
         run: |
@@ -48,19 +52,53 @@ jobs:
           pip install -r requirements.txt
       
       # -------------------------------------------------
-      # 5️⃣ Build the debug APK
+      # 5️⃣ Set up Android SDK/NDK environment
+      # -------------------------------------------------
+      - name: Setup Android environment
+        run: |
+          echo "ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
+          echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
+      
+      # -------------------------------------------------
+      # 6️⃣ Cache Buildozer directories
+      # -------------------------------------------------
+      - name: Cache Buildozer global directory
+        uses: actions/cache@v3
+        with:
+          path: ~/.buildozer
+          key: buildozer-global-${{ hashFiles('buildozer.spec') }}
+      
+      - name: Cache Buildozer project directory
+        uses: actions/cache@v3
+        with:
+          path: .buildozer
+          key: buildozer-project-${{ hashFiles('buildozer.spec') }}
+      
+      # -------------------------------------------------
+      # 7️⃣ Initialize Buildozer (this creates necessary directories)
+      # -------------------------------------------------
+      - name: Initialize Buildozer
+        run: |
+          source venv/bin/activate
+          buildozer android init || true
+      
+      # -------------------------------------------------
+      # 8️⃣ Build the debug APK
       # -------------------------------------------------
       - name: Build APK (debug)
         run: |
           source venv/bin/activate
-          buildozer android clean
-          buildozer -v android debug
+          yes | buildozer -v android debug
+        env:
+          BUILDOZER_WARN_ON_ROOT: 0
       
       # -------------------------------------------------
-      # 6️⃣ Upload the generated APK as an artifact
+      # 9️⃣ Upload the generated APK as an artifact
       # -------------------------------------------------
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: calculator-apk
           path: bin/*.apk
+          if-no-files-found: error
