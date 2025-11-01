@@ -9,11 +9,12 @@ source.include_exts = py,png,jpg,kv,atlas
 version = 0.1
 requirements = python3,kivy
 
-# Android specific
+# Android specific - updated to remove deprecated settings
 android.api = 33
 android.minapi = 21
-android.ndk = 25.1.8937393
-android.sdk = 33
+# android.sdk is deprecated - removed
+# android.ndk is deprecated - removed
+android.ndk_api = 21
 android.build_tools = 33.0.0
 
 # Presplash and icon
