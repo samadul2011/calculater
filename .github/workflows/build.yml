@@ -10,12 +10,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-
-    - name: Install system dependencies
+    - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y \
@@ -23,34 +18,15 @@ jobs:
           openjdk-11-jdk-headless \
           git \
           unzip \
-          zip \
-          ccache \
-          autoconf \
-          libtool \
-          pkg-config \
-          zlib1g-dev \
-          libncurses5-dev \
-          libncursesw5-dev \
-          libtinfo5 \
-          cmake \
-          ninja-build \
-          libffi-dev \
-          libssl-dev
+          zip
 
-    - name: Install Buildozer and dependencies
+    - name: Install Buildozer
       run: |
-        pip3 install --user --upgrade Cython==0.29.33 buildozer virtualenv
+        pip3 install --user buildozer
 
-    - name: Initialize Buildozer
+    - name: Build APK
       run: |
-        python3 -m buildozer init
-
-    - name: Build APK with Buildozer
-      run: |
-        python3 -m buildozer -v android debug
-      env:
-        # Let Buildozer manage its own dependencies
-        BUILDOLDER_ROOT: ${{ github.workspace }}
+        buildozer android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
