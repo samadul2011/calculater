@@ -1,94 +1,113 @@
+# filepath: calculator-app/main.py
+import math
 from kivy.app import App
+from kivy.lang import Builder
+from kivy.properties import StringProperty, BooleanProperty, NumericProperty
 from kivy.uix.boxlayout import BoxLayout
-from kivy.config import Config
 
-# Set window size (optional, useful for desktop testing)
-Config.set('graphics', 'width', '300')
-Config.set('graphics', 'height', '400')
+# Load the KV file (you could also embed the KV string here)
+Builder.load_file('calculator.kv')
 
-class CalculatorLayout(BoxLayout):
-    memory = 0
-    last_result = 0
-    result_displayed = False
 
-    def click_button(self, value):
-        display = self.ids.display
-        current = display.text
+class CalcLogic(BoxLayout):
+    # UI bindings
+    display_text = StringProperty("")
+    result_displayed = BooleanProperty(False)
 
-        if value == '=':
-            try:
-                result = str(eval(current))
-                display.text = result
-                self.last_result = result
-                self.result_displayed = True
-            except Exception:
-                display.text = "Error"
-                self.result_displayed = False
-        elif value == 'C':
-            self.clear()
-        elif value == 'CE':
-            display.text = ''
+    # Memory
+    memory = NumericProperty(0)
+
+    # ------------------------------------------------------ #
+    # Helper methods – keep the same semantics you had in Tk #
+    # ------------------------------------------------------ #
+    def _clear(self):
+        self.display_text = ""
+        self.result_displayed = False
+
+    def _backspace(self):
+        self.display_text = self.display_text[:-1]
+        if not self.display_text:
             self.result_displayed = False
+
+    def _toggle_sign(self):
+        if self.display_text.startswith('-'):
+            self.display_text = self.display_text[1:]
+        elif self.display_text:
+            self.display_text = '-' + self.display_text
+        self.result_displayed = False
+
+    # ------------------------------------------------------ #
+    # Public callbacks from the KV file (buttons, keys)     #
+    # ------------------------------------------------------ #
+    def on_button(self, value):
+        """Callback for all calculator buttons."""
+        if value == 'C':
+            self._clear()
+        elif value == 'CE':
+            self._clear()
         elif value == '←':
-            display.text = current[:-1]
-            if not display.text:
-                self.result_displayed = False
+            self._backspace()
         elif value == '±':
-            if current and current != "Error":
-                if current.startswith('-'):
-                    display.text = current[1:]
-                else:
-                    display.text = '-' + current
-                self.result_displayed = False
+            self._toggle_sign()
         elif value == 'MC':
             self.memory = 0
         elif value == 'MR':
-            display.text = str(self.memory)
+            self.display_text = str(self.memory)
             self.result_displayed = True
         elif value == 'M+':
             try:
-                self.memory += float(current)
+                self.memory += float(self.display_text)
             except ValueError:
                 pass
         elif value == 'M-':
             try:
-                self.memory -= float(current)
+                self.memory -= float(self.display_text)
             except ValueError:
                 pass
-        else:
+        elif value == '=':
+            self._evaluate()
+        else:                                   # digits, '.' and operators
             if self.result_displayed:
-                display.text = ''
+                self.display_text = ""
                 self.result_displayed = False
-            display.text += value
+            self.display_text += value
 
-    def clear(self):
-        self.ids.display.text = ''
-        self.last_result = 0
-        self.result_displayed = False
+    def _evaluate(self):
+        """Evaluate the expression shown in the display."""
+        try:
+            # NOTE: eval is dangerous – you may want a safer parser.
+            result = eval(self.display_text, {"__builtins__": {}}, {})
+            self.display_text = str(result)
+            self.result_displayed = True
+        except Exception:
+            self.display_text = "Error"
+            self.result_displayed = False
 
-    def on_key_down(self, window, key, scancode, codepoint, modifiers):
-        key_mapping = {
-            'escape': 'C',
-            'backspace': '←',
-            'enter': '=',
-            'return': '='
-        }
+    # ------------------------------------------------------ #
+    # Keyboard handling (optional – works on desktop)       #
+    # ------------------------------------------------------ #
+    def keyboard_on_key_down(self, window, keycode, text, modifiers):
+        """Map desktop keyboard keys to button presses."""
+        key = keycode[1]
+        if key.isdigit() or key in '+-*/.':
+            self.on_button(key)
+        elif key in ('enter', 'numpadenter'):
+            self.on_button('=')
+        elif key == 'backspace':
+            self.on_button('←')
+        elif key == 'escape':
+            self.on_button('C')
+        return True
 
-        key_name = key_mapping.get(codepoint.lower(), codepoint)
-
-        if codepoint.isdigit() or codepoint in '+-*/.=':
-            self.click_button(codepoint)
-        elif key_name in ['C', '←', '=']:
-            self.click_button(key_name)
 
 class CalculatorApp(App):
     def build(self):
-        self.title = "Simple Calculator"
-        layout = CalculatorLayout()
-        # Listen for keyboard events
+        root = CalcLogic()
+        # Bind keyboard only on desktop (not on Android)
         from kivy.core.window import Window
-        Window.bind(on_keyboard=layout.on_key_down)
-        return layout
+        Window.bind(on_key_down=root.keyboard_on_key_down)
+        return root
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     CalculatorApp().run()
