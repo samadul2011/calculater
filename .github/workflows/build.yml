@@ -1,50 +1,43 @@
-name: Build APK  # The name of your workflow [citation:5][citation:6]
-
-on: [push]  # Defines the trigger event [citation:5][citation:6]
+name: Build APK
+on: [push]
 
 jobs:
-  build-android:  # The identifier for your job
+  build-android:
     name: Build for Android
-    runs-on: ubuntu-latest  # The OS for the runner [citation:5]
+    runs-on: ubuntu-latest
     
     steps:
-      # Step 1: Checkout the repository code
-      - name: Checkout code
-        uses: actions/checkout@v4  # This action checks out your code [citation:9]
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      # Step 2: Set up the Python environment
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
 
-      # Step 3: Install system dependencies
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            python3-pip \
-            openjdk-11-jdk-headless \
-            git \
-            unzip \
-            zip
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          python3-pip \
+          openjdk-11-jdk-headless \
+          git \
+          unzip \
+          zip
 
-      # Step 4: Install Buildozer and Cython
-      - name: Install Buildozer
-        run: pip3 install --user buildozer Cython==0.29.33
+    - name: Install Buildozer
+      run: pip3 install --user buildozer Cython==0.29.33
 
-      # Step 5: Build the APK (This was your problematic step, now correctly placed)
-      - name: Build APK with Buildozer
-        run: |  # The pipe character allows for a multi-line script [citation:9]
-          buildozer android clean
-          buildozer -v android debug 2>&1 | tee build.log
-        env:  # Setting an environment variable for the step [citation:1][citation:9]
-          BUILDOLDER_ROOT: ${{ github.workspace }}
+    - name: Build APK with Buildozer
+      run: |
+        buildozer android clean
+        buildozer -v android debug
+      env:
+        BUILDOLDER_ROOT: ${{ github.workspace }}
 
-      # Step 6: Upload the generated APK
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: calculator-apk
-          path: bin/*.apk  # Path to the APK file created by Buildozer
-          retention-days: 7
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: calculator-apk
+        path: bin/*.apk
+        retention-days: 7
