@@ -1,33 +1,20 @@
+# buildozer.spec
 [app]
-title = Simple Calculator
-package.name = simplecalculator
-package.domain = org.example
 
+# Mandatory fields
+title = Calculator
+package.name = calculator
+package.domain = org.example   # change if you plan to publish
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas
-
+source.include_exts = py,kv,png,jpg,atlas
 version = 0.1
-requirements = python3,kivy
 
-android.api = 33
-android.minapi = 21
-android.ndk_api = 21
+# Dependencies
+requirements = python3,kivy==2.3.0
 
-presplash.filename = %(source.dir)s/presplash.png
-icon.filename = %(source.dir)s/icon.png
-
+# UI options
 orientation = portrait
-fullscreen = 0
+fullscreen = 1
+android.permissions = INTERNET
 
-[buildozer]
-log_level = 2
-
-
-android.accept_sdk_license = True
-android.skip_update = False
-
-# Allow Buildozer to automatically accept SDK licenses
-android.accept_sdk_license = True
-
-# Ensure Buildozer does not skip the SDK update
-android.skip_update = False
+# (All other sections can stay at their defaults)
