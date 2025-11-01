@@ -23,7 +23,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          # python3-full provides the removed distutils module
+          # All packages are installed in ONE command.
           sudo apt-get install -y \
             python3-full python3-pip python3-venv \
             git zip unzip openjdk-11-jdk \
